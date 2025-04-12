@@ -1,0 +1,23 @@
+INSTAGRAM DM TEXT REPORT
+=======================
+
+Date: 2025-04-12 11:06:02
+Username: jerrybeecox
+Detected Conversations: 3
+Unread Count: 2
+
+CONVERSATIONS (Sorted by likelihood):
+----------------------------------
+
+#1: jerrybeecox [read]
+Full text: jerrybeecox
+Confidence score: 5/10
+
+#2: divit [read]
+Message: hi · 2m Unread
+Confidence score: 5/10
+
+#3: dk [read]
+Message: lovely · 11h Unread
+Confidence score: 5/10
+
