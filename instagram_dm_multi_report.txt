@@ -1,7 +1,7 @@
 INSTAGRAM DM MULTI-CONVERSATION REPORT
 ====================================
 
-Date: 2025-04-12 21:37:32
+Date: 2025-04-12 22:47:25
 Account: jerrybeecox
 
 
@@ -11,7 +11,7 @@ CONVERSATION #1: divit
 
 Username: divit
 URL: https://www.instagram.com/direct/t/113032460084998/
-Messages Found: 26
+Messages Found: 23
 Screenshot: conversation_divit.png
 
 MOST RECENT MESSAGES:
@@ -58,7 +58,7 @@ CONVERSATION #2: cheesepizzalover911
 
 Username: cheesepizzalover911
 URL: https://www.instagram.com/direct/t/17846757813239078/
-Messages Found: 22
+Messages Found: 20
 Screenshot: conversation_cheesepizzalover911.png
 
 MOST RECENT MESSAGES:
@@ -101,7 +101,7 @@ CONVERSATION #3: rosescanbebluetoo
 
 Username: rosescanbebluetoo
 URL: https://www.instagram.com/direct/t/17842375940115639/
-Messages Found: 16
+Messages Found: 15
 Screenshot: conversation_rosescanbebluetoo.png
 
 MOST RECENT MESSAGES:
@@ -130,35 +130,34 @@ Requests
 Why do some pizzas have no cheese?
  
 ·
-2h
+3h
 divit
 You heard about Portia?
  
 ·
-2h
+3h
 S.A.M 
 What did I do to eat? I trapped all morning I trapped all morning
  
 ·
-2h
-Unread
+3h
 rosescanbebluetoo
 Portia AI’s going crazy right now🔥
  
 ·
-2h
+3h
 
 [9] rosescanbebluetoo: cheesepizzalover911
 Why do some pizzas have no cheese?
  
 ·
-2h
+3h
 
 [10] rosescanbebluetoo: divit
 You heard about Portia?
  
 ·
-2h
+3h
 
 
 ==================================================
@@ -200,28 +199,28 @@ Requests
 Why do some pizzas have no cheese?
  
 ·
-2h
+3h
 divit
 You heard about Portia?
  
 ·
-2h
+3h
 S.A.M 
 What did I do to eat? I trapped all morning I trapped all morning
  
 ·
-2h
+3h
 rosescanbebluetoo
 Portia AI’s going crazy right now🔥
  
 ·
-2h
+3h
 
 [10] S.A.M: cheesepizzalover911
 Why do some pizzas have no cheese?
  
 ·
-2h
+3h
 
 
 
@@ -230,7 +229,7 @@ SUMMARY
 
 Total conversations checked: 4
 Conversations found: 4
-- divit: 26 messages
-- cheesepizzalover911: 22 messages
-- rosescanbebluetoo: 16 messages
+- divit: 23 messages
+- cheesepizzalover911: 20 messages
+- rosescanbebluetoo: 15 messages
 - S.A.M: 17 messages
