@@ -73,215 +73,189 @@ async def run_instagram_workflow():
             print("No verification needed, continuing...")
         
         # Better handling for "Save login info" element
-        print("Checking for 'Save login info' element...")
-        try:
-            # First try: Look for text content that indicates the save login info screen
-            login_info_text = await page.evaluate('''
-            () => {
-                const bodyText = document.body.innerText;
-                return bodyText.includes('Save login info') || 
-                       bodyText.includes('Save Login Info') || 
-                       bodyText.includes('Remember login details');
-            }
-            ''')
+        # print("Checking for 'Save login info' element...")
+        # try:
+        #     # First try: Look for text content that indicates the save login info screen
+        #     login_info_text = await page.evaluate('''
+        #     () => {
+        #         const bodyText = document.body.innerText;
+        #         return bodyText.includes('Save login info') || 
+        #                bodyText.includes('Save Login Info') || 
+        #                bodyText.includes('Remember login details');
+        #     }
+        #     ''')
             
-            if login_info_text:
-                print("✅ Detected 'Save login info' screen by text content")
+        #     if login_info_text:
+        #         print("✅ Detected 'Save login info' screen by text content")
                 
-                # Try multiple approaches to find and click the "Not Now" button
-                button_clicked = False
+        #         # Try multiple approaches to find and click the "Not Now" button
+        #         button_clicked = False
                 
-                # Approach 1: Direct button selectors
-                save_info_buttons = [
-                    'button:has-text("Not Now")', 
-                    'button:has-text("Not now")',
-                    'button:has-text("Skip")',
-                    'button[tabindex="0"]:has-text("Not")'
-                ]
+        #         # Approach 1: Direct button selectors
+        #         save_info_buttons = [
+        #             'button:has-text("Not Now")', 
+        #             'button:has-text("Not now")',
+        #             'button:has-text("Skip")',
+        #             'button[tabindex="0"]:has-text("Not")'
+        #         ]
                 
-                for button_selector in save_info_buttons:
-                    try:
-                        save_button = await page.wait_for_selector(button_selector, timeout=3000)
-                        if save_button:
-                            await save_button.click()
-                            print(f"✅ Clicked '{button_selector}' button")
-                            button_clicked = True
-                            await page.wait_for_timeout(2000)  # Longer wait time
-                            break
-                    except:
-                        continue
+        #         for button_selector in save_info_buttons:
+        #             try:
+        #                 save_button = await page.wait_for_selector(button_selector, timeout=3000)
+        #                 if save_button:
+        #                     await save_button.click()
+        #                     print(f"✅ Clicked '{button_selector}' button")
+        #                     button_clicked = True
+        #                     await page.wait_for_timeout(2000)  # Longer wait time
+        #                     break
+        #             except:
+        #                 continue
                 
-                # Approach 2: If direct selectors failed, try more aggressive approach
-                if not button_clicked:
-                    print("Trying alternative approach to find 'Not Now' button...")
-                    clicked = await page.evaluate('''
-                    () => {
-                        // Find all buttons
-                        const buttons = Array.from(document.querySelectorAll('button'));
+        #         # Approach 2: If direct selectors failed, try more aggressive approach
+        #         if not button_clicked:
+        #             print("Trying alternative approach to find 'Not Now' button...")
+        #             clicked = await page.evaluate('''
+        #             () => {
+        #                 // Find all buttons
+        #                 const buttons = Array.from(document.querySelectorAll('button'));
                         
-                        // Look for buttons containing "Not Now" or "Skip" text
-                        for (const button of buttons) {
-                            if (button.innerText.includes('Not Now') || 
-                                button.innerText.includes('Not now') || 
-                                button.innerText.includes('Skip')) {
-                                    button.click();
-                                    return true;
-                            }
-                        }
+        #                 // Look for buttons containing "Not Now" or "Skip" text
+        #                 for (const button of buttons) {
+        #                     if (button.innerText.includes('Not Now') || 
+        #                         button.innerText.includes('Not now') || 
+        #                         button.innerText.includes('Skip')) {
+        #                             button.click();
+        #                             return true;
+        #                     }
+        #                 }
                         
-                        // If no specific button, try any bottom button
-                        const allButtons = Array.from(document.querySelectorAll('button'));
-                        if (allButtons.length >= 2) {
-                            // Often the "Not Now" is the second button
-                            allButtons[1].click();
-                            return true;
-                        }
+        #                 // If no specific button, try any bottom button
+        #                 const allButtons = Array.from(document.querySelectorAll('button'));
+        #                 if (allButtons.length >= 2) {
+        #                     // Often the "Not Now" is the second button
+        #                     allButtons[1].click();
+        #                     return true;
+        #                 }
                         
-                        return false;
-                    }
-                    ''')
+        #                 return false;
+        #             }
+        #             ''')
                     
-                    if clicked:
-                        print("✅ Clicked 'Not Now' button via JavaScript")
-                        await page.wait_for_timeout(2000)
-            else:
-                print("No 'Save login info' screen detected by text content")
+        #             if clicked:
+        #                 print("✅ Clicked 'Not Now' button via JavaScript")
+        #                 await page.wait_for_timeout(2000)
+        #     else:
+        #         print("No 'Save login info' screen detected by text content")
         
-        except Exception as e:
-            print(f"Error handling 'Save login info': {e}")
-        
-        # Handle "Turn on notifications" popup
-        try:
-            print("Checking for 'Turn on notifications' popup...")
-            notification_selectors = [
-                'button:has-text("Not Now")', 
-                'button:has-text("Skip")',
-                'button:has-text("Not now")',
-                'button[tabindex="0"]:has-text("Not")',
-                # Specific selector for this notification dialog
-                'h2:has-text("Turn on notifications") ~ div button:last-child'
-            ]
-            
-            for button_selector in notification_selectors:
-                try:
-                    notification_button = await page.wait_for_selector(button_selector, timeout=3000)
-                    if notification_button:
-                        await notification_button.click()
-                        print(f"✅ Clicked '{button_selector}' on Turn on notifications popup")
-                        await page.wait_for_timeout(1500) # Wait for dialog to close
-                        break
-                except:
-                    continue
-        except Exception as e:
-            print(f"No notifications popup or couldn't handle it: {e}")
+        # except Exception as e:
+        #     print(f"Error handling 'Save login info': {e}")
+        #bingo
 
-        # Handle notifications dialog
-        try:
-            print("Checking for notifications dialog...")
-            notif_buttons = [
-                'button:has-text("Not Now")', 
-                'button:has-text("Skip")',
-                'button:has-text("Not now")',
-                'button[tabindex="0"]:has-text("Not")'
-            ]
+        # # Handle "Turn on notifications" popup
+        # try:
+        #     print("Checking for 'Turn on notifications' popup...")
+        #     notification_selectors = [
+        #         'button:has-text("Not Now")', 
+        #         'button:has-text("Skip")',
+        #         'button:has-text("Not now")',
+        #         'button[tabindex="0"]:has-text("Not")',
+        #         # Specific selector for this notification dialog
+        #         'h2:has-text("Turn on notifications") ~ div button:last-child'
+        #     ]
             
-            for button_selector in notif_buttons:
-                try:
-                    notif_button = await page.wait_for_selector(button_selector, timeout=3000)
-                    if notif_button:
-                        await notif_button.click()
-                        print(f"✅ Clicked '{button_selector}' on notifications dialog")
-                        await page.wait_for_timeout(1500) # Wait for dialog to close
-                        break
-                except:
-                    continue
-        except Exception as e:
-            print(f"No notifications dialog or couldn't handle it: {e}")
-        
-        # Wait for home page to load - look for multiple possible indicators
-        home_loaded = False
-        for selector in ['svg[aria-label="Home"]', 'svg[aria-label="Direct"]', 'a[href="/explore/"]']:
-            try:
-                await page.wait_for_selector(selector, timeout=5000)
-                home_loaded = True
-                print(f"✅ Home page loaded, found indicator: {selector}")
-                break
-            except:
-                continue
-        
-        if not home_loaded:
-            raise Exception("Could not confirm successful login to home page")
+        #     for button_selector in notification_selectors:
+        #         try:
+        #             notification_button = await page.wait_for_selector(button_selector, timeout=3000)
+        #             if notification_button:
+        #                 await notification_button.click()
+        #                 print(f"✅ Clicked '{button_selector}' on Turn on notifications popup")
+        #                 await page.wait_for_timeout(1500) # Wait for dialog to close
+        #                 break
+        #         except:
+        #             continue
+        # except Exception as e:
+        #     print(f"No notifications popup or couldn't handle it: {e}")
+
+        # # Handle notifications dialog
+        # try:
+        #     print("Checking for notifications dialog...")
+        #     notif_buttons = [
+        #         'button:has-text("Not Now")', 
+        #         'button:has-text("Skip")',
+        #         'button:has-text("Not now")',
+        #         'button[tabindex="0"]:has-text("Not")'
+        #     ]
             
-        await page.screenshot(path="3_home_page.png")
-        print("✅ Screenshot saved: 3_home_page.png")
-        print("Successfully logged in!")
+        #     for button_selector in notif_buttons:
+        #         try:
+        #             notif_button = await page.wait_for_selector(button_selector, timeout=3000)
+        #             if notif_button:
+        #                 await notif_button.click()
+        #                 print(f"✅ Clicked '{button_selector}' on notifications dialog")
+        #                 await page.wait_for_timeout(1500) # Wait for dialog to close
+        #                 break
+        #         except:
+        #             continue
+        # except Exception as e:
+        #     print(f"No notifications dialog or couldn't handle it: {e}")
+        
+        # # Wait for home page to load - look for multiple possible indicators
+        # home_loaded = False
+        # for selector in ['svg[aria-label="Home"]', 'svg[aria-label="Direct"]', 'a[href="/explore/"]']:
+        #     try:
+        #         await page.wait_for_selector(selector, timeout=5000)
+        #         home_loaded = True
+        #         print(f"✅ Home page loaded, found indicator: {selector}")
+        #         break
+        #     except:
+        #         continue
+        
+        # if not home_loaded:
+        #     raise Exception("Could not confirm successful login to home page")
+            
+        # await page.screenshot(path="3_home_page.png")
+        # print("✅ Screenshot saved: 3_home_page.png")
+        # print("Successfully logged in!")
         
         # Step 2: Navigate to Direct Messages using CLICK method first
-        print("\n📨 Attempting to navigate to Direct Messages...")
+        print("\n📨 Directly navigating to Instagram DMs...")
+
+    # Try direct navigation to inbox with appropriate wait time
+    try:
+        await page.goto("https://www.instagram.com/direct/inbox/", timeout=15000)
+        await page.wait_for_load_state("networkidle", timeout=10000)
+        print("✅ Navigated directly to inbox URL")
+
+        # Check if we're on the DMs page and logged in
+        is_logged_in = await page.evaluate('''
+        () => {
+            // Look for indicators that we're logged in and on DMs page
+            return document.body.innerText.includes("Messages") || 
+                document.querySelectorAll('div[aria-label="Chats"]').length > 0 ||
+                document.querySelectorAll('div[role="listbox"]').length > 0;
+        }
+        ''')
         
-        dm_navigation_successful = False
+        if is_logged_in:
+            print("✅ Successfully logged in and accessed DMs")
+        else:
+            print("⚠️ On DMs page but login status unclear, proceeding anyway")
+    except Exception as e:
+        print(f"Direct navigation to inbox failed: {e}")
         
+        # Fallback to mobile optimized URL
         try:
-            print("Method 1: Clicking on Direct icon...")
-            # Look for the Direct Messages icon and click it
-            direct_selectors = [
-                'svg[aria-label="Direct"]', 
-                'a[href*="direct"]',
-                'a[href="/direct/inbox/"]'
-            ]
-            
-            for direct_selector in direct_selectors:
-                try:
-                    direct_button = await page.wait_for_selector(direct_selector, timeout=3000)
-                    if direct_button:
-                        await direct_button.click()
-                        print(f"✅ Clicked Direct Messages icon with selector: {direct_selector}")
-                        await page.wait_for_timeout(5000)  # Wait a bit longer after clicking
-                        
-                        # Check if we've navigated to DMs
-                        if 'direct' in page.url or 'inbox' in page.url:
-                            print("✅ Successfully navigated to Direct Messages via icon click")
-                            dm_navigation_successful = True
-                            break
-                except:
-                    continue
-                    
-            if not dm_navigation_successful:
-                print("⚠️ Clicked icon but not on DMs page yet, waiting longer...")
-                await page.wait_for_load_state("networkidle", timeout=10000)
-                if 'direct' in page.url or 'inbox' in page.url:
-                    dm_navigation_successful = True
-                
-        except Exception as e:
-            print(f"Could not click Direct icon: {e}")
-            
-        # If Method 1 didn't work, try Method 2
-        if not dm_navigation_successful:
-            try:
-                print("Method 2: Trying direct URL navigation...")
-                # Try direct navigation to inbox
-                await page.goto("https://www.instagram.com/direct/inbox/", timeout=40000)
-                await page.wait_for_load_state("networkidle", timeout=10000)
-                print("✅ Navigated directly to inbox URL")
-                dm_navigation_successful = True
-            except Exception as e:
-                print(f"Direct URL navigation failed: {e}")
-        
-        # If Method 2 didn't work, try Method 3
-        if not dm_navigation_successful:
-            try:
-                print("Method 3: Trying mobile view URL...")
-                await page.goto("https://www.instagram.com/direct/inbox/?__d=y", timeout=40000)
-                await page.wait_for_load_state("networkidle", timeout=10000)
-                print("✅ Navigated to mobile optimized inbox URL")
-                dm_navigation_successful = True
-            except Exception as e:
-                print(f"Mobile URL navigation failed: {e}")
-        
-        # If all navigation methods failed, raise exception
-        if not dm_navigation_successful:
-            raise Exception("All methods to access DMs failed")
-        
+            print("Trying mobile view URL...")
+            await page.goto("https://www.instagram.com/direct/inbox/?__d=y", timeout=15000)
+            await page.wait_for_load_state("networkidle", timeout=10000)
+            print("✅ Navigated to mobile optimized inbox URL")
+        except Exception as mobile_e:
+            print(f"Mobile URL navigation failed: {mobile_e}")
+            raise Exception("Could not navigate to DMs page after login")
+
+    # Take screenshot of DM page
+        await page.screenshot(path="3_dm_page.png")
+        print("✅ Screenshot saved: 3_dm_page.png")
         # Check again for notification popup that might appear after navigation
         try:
             notification_button = await page.wait_for_selector('button:has-text("Not Now"), button:has-text("Not now")', timeout=2000)
@@ -337,6 +311,86 @@ async def run_instagram_workflow():
                 print("⚠️ Could not click on any conversation")
         except Exception as e:
             print(f"Error trying to access conversations: {e}")
+        
+        # Replace both the multi-name version and the divit-specific version with this combined approach:
+
+        # Try to find and click on specific conversations
+        try:
+            print("Looking for specific conversations...")
+            
+            # Define target usernames - ADD ALL YOUR TARGET USERNAMES HERE
+            target_usernames = ["divit", "cheesepizzalover911", "rosescanbebluetoo", "S.A.M"]
+            conversation_clicked = False
+            
+            # Loop through each username and try to find their conversations
+            for username in target_usernames:
+                print(f"👤 Looking for conversations with '{username}'...")
+                
+                # Use the SUCCESSFUL selector pattern that works for divit, but for each username
+                conversation_selectors = [
+                    # Based on the specific HTML structure that works
+                    f'div.x9f619 div.x78zum5 span:has-text("{username}")',
+                    f'div[class*="x9f619"] div[class*="x78zum5"] span:has-text("{username}")',
+                    # More general selectors that might match conversation elements
+                    f'span[dir="auto"]:has-text("{username}")',
+                    f'div[role="listbox"] div span:has-text("{username}")'
+                ]
+                
+                for selector in conversation_selectors:
+                    try:
+                        print(f"Trying selector: {selector}")
+                        conversation = await page.wait_for_selector(selector, timeout=3000)
+                        if conversation:
+                            print(f"✅ Found conversation with selector: {selector} for {username}")
+                            
+                            # Click on the parent element that represents the whole conversation
+                            await page.evaluate(f'''
+                            (selector) => {{
+                                const element = document.querySelector(selector);
+                                if (element) {{
+                                    // Find the clickable parent container (usually 3-4 levels up)
+                                    let clickTarget = element;
+                                    // Navigate up to find a suitable clickable container
+                                    for (let i = 0; i < 4 && clickTarget; i++) {{
+                                        if (clickTarget.tagName === 'DIV' && 
+                                            (clickTarget.clientHeight > 40 && clickTarget.clientWidth > 200)) {{
+                                            break;
+                                        }}
+                                        clickTarget = clickTarget.parentElement;
+                                    }}
+                                    
+                                    if (clickTarget) {{
+                                        console.log('Found click target for {username}:', clickTarget);
+                                        clickTarget.click();
+                                        return true;
+                                    }}
+                                }}
+                                return false;
+                            }}
+                            ''', selector)
+                            
+                            print(f"✅ Clicked on conversation for {username}")
+                            await page.wait_for_timeout(3000)  # Wait for conversation to load
+                            
+                            # Check if URL changed (indicates successful click)
+                            if '/direct/t/' in page.url:
+                                print(f"✅ Successfully opened conversation for {username}: {page.url}")
+                                conversation_clicked = True
+                                break
+                    except Exception as e:
+                        print(f"Error with selector {selector} for {username}: {e}")
+                        continue
+                
+                # Break outer loop if we found and clicked any conversation
+                if conversation_clicked:
+                    print(f"✅ Successfully clicked on conversation for {username}")
+                    break
+                    
+            if not conversation_clicked:
+                print("⚠️ Could not click on any of the target usernames' conversations")
+
+        except Exception as e:
+            print(f"Error trying to click on conversations: {e}")
         
         # Add this code where you're trying to click on conversations
 
@@ -572,7 +626,7 @@ async def run_instagram_workflow():
                                 lines.slice(1).join(' ').trim() : '';
                     
                     // Look for time patterns
-                    const timeMatch = candidate.text.match(/((?:\\d{1,2}:?\\d{2} ?[AP]M)|(?:a few|\\d+) (?:seconds|minutes|hours|days|weeks) ago|[Yy]esterday|[Tt]oday)/);
+                    const timeMatch = candidate.text.match(/((\\d{1,2}:?\\d{2} ?[AP]M)|(a few|\\d+) (seconds|minutes|hours|days|weeks) ago|[Yy]esterday|[Tt]oday)/);
                     const timeText = timeMatch ? timeMatch[0] : '';
                     
                     // Check for unread indicators
@@ -686,6 +740,126 @@ async def run_instagram_workflow():
             print("Could not extract conversation text")
             print("Please check the screenshot at 4_messages_page.png to see your messages")
         
+        # Add this code after successfully clicking on a conversation:
+
+        # If we got into a conversation, extract messages
+        if '/direct/t/' in page.url:
+            print("\n📄 Conversation opened - extracting messages...")
+            
+            # Take screenshot of conversation
+            await page.screenshot(path="conversation_messages.png")
+            print("✅ Screenshot saved: conversation_messages.png")
+            
+            # Try to extract message content
+            message_data = await page.evaluate('''
+            () => {
+                // Find message elements
+                const messages = [];
+                
+                // Method 1: Look for standard message containers
+                document.querySelectorAll('div[role="row"]').forEach(row => {
+                    if (row.innerText && row.innerText.length > 0) {
+                        messages.push({
+                            text: row.innerText,
+                            is_mine: row.classList.contains('xdl72j9') || // Some Instagram classes for outgoing messages
+                                   row.querySelector('[style*="margin-left: auto"]') !== null,
+                            timestamp: null // We'll try to find this separately
+                        });
+                    }
+                });
+                
+                // Method 2: Look for elements with certain structural hints
+                const possibleMessages = [];
+                document.querySelectorAll('div').forEach(div => {
+                    // Message bubbles are often of medium height with reasonable width
+                    if (div.clientHeight > 20 && div.clientHeight < 300 &&
+                        div.clientWidth > 50 && div.clientWidth < 500 &&
+                        div.innerText && div.innerText.length > 0) {
+                        
+                        // Check if has padding, borders or distinct background - typical for message bubbles
+                        const style = window.getComputedStyle(div);
+                        const hasStyle = style.padding !== '0px' || 
+                                        style.border !== '' || 
+                                        style.borderRadius !== '0px' ||
+                                        style.background !== 'none';
+                                        
+                        if (hasStyle) {
+                            possibleMessages.push({
+                                element: div,
+                                text: div.innerText,
+                                score: 0 // Will calculate based on features
+                            });
+                        }
+                    }
+                });
+                
+                // Score possible messages based on features
+                possibleMessages.forEach(msg => {
+                    // Messages are often grouped by sender
+                    if (msg.element.parentElement && 
+                        msg.element.parentElement.childElementCount > 1) {
+                        msg.score += 3;
+                    }
+                    
+                    // Messages often have avatars nearby
+                    if (msg.element.querySelector('img') || 
+                        msg.element.parentElement.querySelector('img')) {
+                        msg.score += 2;
+                    }
+                    
+                    // Messages usually contain text that looks like a timestamp
+                    if (msg.text.match(/\\d{1,2}:\\d{2}/) || 
+                        msg.text.match(/yesterday|today|now|min|hour/i)) {
+                        msg.score += 2;
+                    }
+                });
+                
+                // Add high-scoring messages to our list
+                possibleMessages
+                    .filter(msg => msg.score >= 3)
+                    .forEach(msg => {
+                        messages.push({
+                            text: msg.text,
+                            is_mine: msg.element.style.marginLeft === 'auto',
+                            timestamp: null
+                        });
+                    });
+                
+                return {
+                    url: window.location.href,
+                    conversation_id: window.location.href.match(/\\/t\\/(.*?)(\\/|$)/)?.[1] || '',
+                    message_count: messages.length,
+                    messages: messages.slice(0, 50) // Limit to 50 messages
+                };
+            }
+            ''');
+            
+            # Create a summary file for the conversation
+            conversation_id = message_data.get('conversation_id', 'unknown')
+            with open(f'conversation_{conversation_id}_summary.txt', 'w') as f:
+                f.write("INSTAGRAM DM CONVERSATION SUMMARY\n")
+                f.write("================================\n\n")
+                f.write(f"Date: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+                f.write(f"Username: {INSTAGRAM_USERNAME}\n")
+                f.write(f"Conversation URL: {message_data.get('url')}\n")
+                f.write(f"Messages Found: {message_data.get('message_count', 0)}\n\n")
+                
+                messages = message_data.get('messages', [])
+                if messages:
+                    f.write("MESSAGES:\n")
+                    f.write("--------\n\n")
+                    
+                    for i, msg in enumerate(messages):
+                        sender = "Me" if msg.get('is_mine') else "Them"
+                        timestamp = f" ({msg.get('timestamp')})" if msg.get('timestamp') else ""
+                        f.write(f"{sender}{timestamp}: {msg.get('text')}\n\n")
+                else:
+                    f.write("No message content could be extracted.\n")
+                    f.write("This is likely due to Instagram's protections against scraping.\n")
+                    f.write("Please check the screenshot at conversation_messages.png\n")
+            
+            print(f"✅ Created message summary: conversation_{conversation_id}_summary.txt")
+        
     except Exception as e:
         # Handle errors and take error screenshot
         print(f"\n❌ Error: {e}")
@@ -696,14 +870,37 @@ async def run_instagram_workflow():
             print("Could not save error screenshot")
     
     finally:
-        # Keep browser open for inspection
+    # Keep browser open for inspection
         print("\nPress Enter to close the browser and exit...")
-        input()
+    try:
+        input()  # Wait for user input
+        print("Closing browser...")
         
-        # Close browser
+        # Close browser resources first
         await context.close()
         await browser.close()
         await playwright.stop()
+        
+        # Force immediate program termination
+        import sys
+        sys.exit(0)  # This ensures the program completely exits
+        
+    except KeyboardInterrupt:
+        print("\nExiting due to keyboard interrupt")
+        import sys
+        sys.exit(1)
+    except Exception as close_error:
+        print(f"Error during browser cleanup: {close_error}")
+        import sys
+        sys.exit(1)
 
-# Run the main function
-asyncio.run(run_instagram_workflow())
+# Run the main function only when directly executed
+if __name__ == "__main__":
+    try:
+        asyncio.run(run_instagram_workflow())
+    except KeyboardInterrupt:
+        print("\nScript terminated by user.")
+    except Exception as e:
+        print(f"\nUnexpected error: {e}")
+        import sys
+        sys.exit(1)

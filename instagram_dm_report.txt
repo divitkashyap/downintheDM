@@ -1,13 +1,13 @@
 INSTAGRAM DM ACCESS REPORT
 =========================
 
-Date: 2025-04-12 11:06:02
+Date: 2025-04-12 19:44:09
 Username: jerrybeecox
-Current URL: https://www.instagram.com/direct/inbox/
-Page Title: (2) Inbox • Direct
-Page Text Length: 179 characters
+Current URL: https://www.instagram.com/direct/t/113032460084998/
+Page Title: (3) Inbox • Direct
+Page Text Length: 580 characters
 DM Indicators Found: Yes
-Conversation View: No
+Conversation View: Yes
 
 Page Analysis:
 Check the screenshots to see your messages:
