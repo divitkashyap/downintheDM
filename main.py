@@ -269,7 +269,7 @@ async def run_instagram_workflow():
                     
                 # Check for login popup (which can appear randomly)
                 login_popup = await page.query_selector('div[role="dialog"] img[alt="Instagram"]')
-                if login_popup:
+                if (login_popup):
                     print(f"⚠️ Login popup detected (attempt {attempt+1})")
                     
                     # Try clicking outside the dialog
@@ -388,78 +388,96 @@ async def run_instagram_workflow():
         print("✅ Screenshot saved: 4_messages_page.png")
         
         # Continue with the rest of your navigation code...
-        
-        # Step 3: Click on a conversation using the new function
-        # Replace your current conversation clicking code with this simplified version:
+        # Replace your current conversation click code with this multi-username version:
 
-        print("\n📋 Attempting to access a conversation...")
+        print("\n👤 Searching for conversations with specific usernames...")
 
-        # Try the simplest, most direct approach first for "divit"
-        try:
-            print("Looking specifically for 'divit' conversation...")
-            divit_selector = 'span:has-text("divit")'
+        # Define our target usernames - adjust as needed
+        target_usernames = ["divit", "cheesepizzalover911", "rosescanbebluetoo", "S.A.M"]
+        conversation_clicked = False
+
+        # Try each username in sequence until one works
+        for username in target_usernames:
+            if conversation_clicked:
+                break  # Stop once we've successfully opened one conversation
+                
+            print(f"Searching for conversation with '{username}'...")
             
-            # Use a longer timeout to ensure we can find the element
-            conversation = await page.wait_for_selector(divit_selector, timeout=5000)
-            if conversation:
-                print(f"✅ Found 'divit' conversation!")
-                
-                # Take screenshot showing what we found
-                await page.screenshot(path="found_conversation.png")
-                
-                # Click directly on the element first
-                try:
-                    await conversation.click()
-                    print("✅ Direct click on conversation element")
-                    await page.wait_for_timeout(3000)
-                except Exception as e:
-                    print(f"Direct click failed: {e}")
-                    
-                    # If direct click fails, try to get the parent and click that
-                    print("Trying parent element click...")
-                    await page.evaluate('''
-                    () => {
-                        const element = document.querySelector('span:has-text("divit")');
-                        if (element) {
-                            // Navigate up multiple levels to find clickable container
-                            let parent = element.parentElement;
-                            for (let i = 0; i < 5 && parent; i++) {
-                                parent.click();  // Try clicking each parent
-                                parent = parent.parentElement;
-                            }
-                            return true;
-                        }
-                        return false;
-                    }
-                    ''')
-                    print("✅ Attempted multiple parent clicks")
-                    await page.wait_for_timeout(3000)
-            else:
-                print("❌ Could not find 'divit' conversation")
-                
-            # Check if any navigation occurred
-            if '/direct/t/' in page.url:
-                print(f"✅ Successfully opened conversation: {page.url}")
-            else:
-                print("⚠️ Did not navigate to a conversation")
-                
-        except Exception as e:
-            print(f"Error trying to find/click conversation: {e}")
-            
-            # Last resort - try clicking at a specific coordinate in the conversations list
+            # Use the approach that worked for "divit" but for each username
             try:
-                print("Attempting coordinate-based click as last resort...")
-                # Click in the upper left area where conversations typically appear
-                await page.mouse.click(150, 200)
-                print("✅ Clicked at coordinates (150, 200)")
-                await page.wait_for_timeout(3000)
+                # This is the selector that worked for "divit", modify for each username
+                username_selector = f'span:has-text("{username}")'
                 
-                # Check if that worked
-                if '/direct/t/' in page.url:
-                    print(f"✅ Coordinate click successfully opened conversation: {page.url}")
-            except Exception as coord_error:
-                print(f"Coordinate click failed: {coord_error}")
-            
+                # Use longer timeout to ensure we find the element
+                conversation = await page.wait_for_selector(username_selector, timeout=5000)
+                if conversation:
+                    print(f"✅ Found '{username}' conversation!")
+                    
+                    # Take screenshot showing what we found
+                    await page.screenshot(path=f"found_{username}.png")
+                    
+                    # Try direct click first
+                    try:
+                        await conversation.click()
+                        print(f"✅ Direct click on {username} conversation")
+                        await page.wait_for_timeout(3000)
+                    except Exception as e:
+                        print(f"Direct click failed: {e}")
+                        
+                        # If direct click fails, try parent element click with JavaScript
+                        print("Trying parent element click...")
+                        await page.evaluate(f'''
+                        () => {{
+                            const element = document.querySelector('span:has-text("{username}")');
+                            if (element) {{
+                                // Navigate up to find clickable container
+                                let parent = element.parentElement;
+                                for (let i = 0; i < 5 && parent; i++) {{
+                                    try {{
+                                        parent.click();  // Try clicking each parent
+                                        return true;
+                                    }} catch (e) {{
+                                        parent = parent.parentElement;
+                                    }}
+                                }}
+                            }}
+                            return false;
+                        }}
+                        ''')
+                        print(f"✅ Attempted parent clicks for {username}")
+                        await page.wait_for_timeout(3000)
+                        
+                    # Check if navigation occurred
+                    if '/direct/t/' in page.url:
+                        print(f"✅ Successfully opened conversation with {username}: {page.url}")
+                        conversation_clicked = True  # Important! Set this flag to indicate success
+                        break  # Exit the username loop
+                    else:
+                        print(f"⚠️ Clicked on {username} but didn't navigate to conversation")
+            except Exception as e:
+                print(f"Could not find/click conversation with '{username}': {e}")
+
+        # If we couldn't click any username conversation, try coordinates as last resort
+        if not conversation_clicked:
+            print("⚠️ Could not find any target conversations, trying coordinates...")
+            try:
+                # Try clicking at different coordinates where conversations might be
+                for y_pos in [150, 200, 250, 300]:
+                    await page.mouse.click(150, y_pos)
+                    print(f"✅ Clicked at coordinates (150, {y_pos})")
+                    await page.wait_for_timeout(2000)
+                    
+                    if '/direct/t/' in page.url:
+                        print(f"✅ Coordinate click successfully opened conversation: {page.url}")
+                        conversation_clicked = True
+                        break
+            except Exception as e:
+                print(f"Coordinate clicking failed: {e}")
+
+        # Take final screenshot of conversation (if we got there)
+            await page.screenshot(path="5_conversation_page.png")
+            print("✅ Screenshot saved: 5_conversation_page.png")
+
             # Take final screenshot of conversation (if we got there)
             await page.screenshot(path="5_conversation_page.png")
             print("✅ Screenshot saved: 5_conversation_page.png")
@@ -866,6 +884,363 @@ async def run_instagram_workflow():
                 
                 print(f"✅ Created message summary: conversation_{conversation_id}_summary.txt")
             
+            # Add this code after successfully clicking on a conversation (after the screenshot)
+
+            # Check if we successfully opened a conversation
+            if '/direct/t/' in page.url:
+                print("\n📝 Extracting conversation data...")
+                
+                # Extract basic page info first
+                page_info = await page.evaluate('''
+                () => {
+                    return {
+                        url: window.location.href,
+                        title: document.title,
+                        text_length: document.body.innerText.length,
+                        has_dm_indicators: document.body.innerHTML.includes('inbox') ||
+                                          document.body.innerHTML.includes('direct') ||
+                                          document.body.innerHTML.includes('message'),
+                        has_conversation_view: window.location.href.includes('/direct/t/') ||
+                                              document.body.innerHTML.includes('messageEntry')
+                    };
+                }
+                ''')
+                
+                # Extract message data
+                message_data = await page.evaluate('''
+                () => {
+                    // Try to find message elements
+                    const messages = [];
+                    
+                    // Look for message containers
+                    const messageElements = document.querySelectorAll('[role="row"], div[data-visualcompletion="ig-direct-message"], div.x78zum5 > div');
+                    
+                    // Extract text from any elements that look like messages
+                    messageElements.forEach(el => {
+                        if (el.innerText && el.innerText.trim().length > 0) {
+                            // Try to determine if this is an outgoing message
+                            const isOutgoing = el.getAttribute('style')?.includes('margin-left: auto') || 
+                                              el.classList.contains('x11lhmoz') ||
+                                              el.classList.contains('xdl72j9');
+                            
+                            messages.push({
+                                text: el.innerText.trim(),
+                                is_outgoing: isOutgoing || false,
+                                html: el.innerHTML.substring(0, 100) // Include some HTML for debugging
+                            });
+                        }
+                    });
+                    
+                    // If we couldn't find messages with the above selectors, try a more general approach
+                    if (messages.length === 0) {
+                        // Find elements that look like message bubbles based on styling and content
+                        document.querySelectorAll('div').forEach(div => {
+                            // Message bubbles are typically elements with reasonable dimensions and some text
+                            if (div.clientHeight > 20 && div.clientHeight < 150 && 
+                                div.clientWidth > 40 && div.clientWidth < 500 &&
+                                div.innerText && div.innerText.trim().length > 0) {
+                                
+                                // Determine if likely a message by checking for certain styles
+                                const computedStyle = window.getComputedStyle(div);
+                                const hasBorderRadius = parseInt(computedStyle.borderRadius) > 3;
+                                const hasPadding = parseInt(computedStyle.padding) > 0 || 
+                                                  parseInt(computedStyle.paddingLeft) > 0;
+                                
+                                if (hasBorderRadius || hasPadding) {
+                                    const isOutgoing = computedStyle.alignSelf === 'flex-end' || 
+                                                    div.getAttribute('style')?.includes('margin-left: auto');
+                                    
+                                    messages.push({
+                                        text: div.innerText.trim(),
+                                        is_outgoing: isOutgoing || false,
+                                        html: div.innerHTML.substring(0, 100)
+                                    });
+                                }
+                            }
+                        });
+                    }
+                    
+                    // Remove likely duplicates (elements that contain exactly the same text)
+                    const unique = [];
+                    const seen = new Set();
+                    messages.forEach(msg => {
+                        if (!seen.has(msg.text)) {
+                            seen.add(msg.text);
+                            unique.push(msg);
+                        }
+                    });
+                    
+                    return {
+                        count: unique.length,
+                        messages: unique.slice(0, 50)  // Limit to 50 messages
+                    };
+                }
+                ''')
+                
+                # Now create a detailed report with conversation data
+                import time
+                report_filename = "instagram_dm_report.txt"
+                
+                with open(report_filename, 'w', encoding='utf-8') as report:
+                    report.write("INSTAGRAM DM ACCESS REPORT\n")
+                    report.write("=========================\n\n")
+                    report.write(f"Date: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+                    report.write(f"Username: {os.environ.get('INSTAGRAM_USERNAME')}\n")
+                    report.write(f"Current URL: {page_info.get('url', 'Unknown')}\n")
+                    report.write(f"Page Title: {page_info.get('title', 'Unknown')}\n")
+                    report.write(f"Page Text Length: {page_info.get('text_length', 0)} characters\n")
+                    report.write(f"DM Indicators Found: {'Yes' if page_info.get('has_dm_indicators', False) else 'No'}\n")
+                    report.write(f"Conversation View: {'Yes' if page_info.get('has_conversation_view', False) else 'No'}\n\n")
+                    
+                    # Add message content if we found any
+                    message_count = message_data.get('count', 0)
+                    messages = message_data.get('messages', [])
+                    
+                    if message_count > 0:
+                        report.write(f"CONVERSATION MESSAGES ({message_count} found)\n")
+                        report.write("============================\n\n")
+                        
+                        for idx, msg in enumerate(messages):
+                            sender = "You" if msg.get('is_outgoing') else "Them"
+                            report.write(f"[{idx+1}] {sender}: {msg.get('text')}\n\n")
+                    else:
+                        report.write("MESSAGES\n")
+                        report.write("========\n\n")
+                        report.write("No individual messages could be extracted.\n")
+                        report.write("Instagram has protections against automated message extraction.\n")
+                        report.write("Check the screenshots to see your messages:\n")
+                        report.write("- 4_messages_page.png: Shows your DM inbox with all conversations\n")
+                        report.write("- 5_conversation_page.png: Shows this specific conversation\n")
+                    
+                print(f"✅ DM report saved to {report_filename}")
+
+        # Replace your single-conversation username code with this multi-conversation loop:
+
+        print("\n👤 Starting multi-conversation data collection...")
+
+        # Define our target usernames - adjust as needed
+        target_usernames = ["divit", "cheesepizzalover911", "rosescanbebluetoo", "S.A.M"]
+        all_conversation_data = []  # To store data from each conversation
+
+        # Create the report file
+        import time
+        multi_report_filename = "instagram_dm_multi_report.txt"
+
+        with open(multi_report_filename, "w", encoding="utf-8") as report:
+            report.write("INSTAGRAM DM MULTI-CONVERSATION REPORT\n")
+            report.write("====================================\n\n")
+            report.write(f"Date: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+            report.write(f"Account: {INSTAGRAM_USERNAME}\n\n")
+            
+            # Try each username in sequence, collecting data from all
+            for i, username in enumerate(target_usernames):
+                report.write(f"\n{'='*50}\n")
+                report.write(f"CONVERSATION #{i+1}: {username}\n")
+                report.write(f"{'='*50}\n\n")
+                
+                print(f"\n[{i+1}/{len(target_usernames)}] 🔍 Searching for conversation with '{username}'...")
+                conversation_found = False
+                
+                try:
+                    # First make sure we're at the inbox page
+                    if not "/direct/inbox/" in page.url:
+                        print("Navigating back to inbox...")
+                        await page.goto("https://www.instagram.com/direct/inbox/", timeout=15000)
+                        await page.wait_for_load_state("domcontentloaded", timeout=10000)
+                        
+                        # Handle any popups that might appear
+                        try:
+                            popup_button = await page.wait_for_selector('button:has-text("Not Now"), button:has-text("Skip")', timeout=2000)
+                            if popup_button:
+                                await popup_button.click()
+                                print("✅ Dismissed popup after navigation")
+                                await page.wait_for_timeout(1000)
+                        except:
+                            pass
+                    
+                    # Use the selector that worked for "divit" for each username
+                    username_selector = f'span:has-text("{username}")'
+                    
+                    # Try to find the conversation with longer timeout
+                    try:
+                        conversation = await page.wait_for_selector(username_selector, timeout=8000)
+                        if conversation:
+                            print(f"✅ Found '{username}' conversation!")
+                            
+                            # Take screenshot showing what we found
+                            await page.screenshot(path=f"found_{username}.png")
+                            
+                            # Try direct click first
+                            try:
+                                await conversation.click()
+                                print(f"✅ Direct click on {username} conversation")
+                                await page.wait_for_timeout(3000)
+                            except Exception as e:
+                                print(f"Direct click failed: {e}")
+                                
+                                # If direct click fails, try parent element click with JavaScript
+                                print("Trying parent element click...")
+                                await page.evaluate(f'''
+                                () => {{
+                                    const element = document.querySelector('span:has-text("{username}")');
+                                    if (element) {{
+                                        // Navigate up to find clickable container
+                                        let parent = element.parentElement;
+                                        for (let i = 0; i < 5 && parent; i++) {{
+                                            try {{
+                                                parent.click();  // Try clicking each parent
+                                                return true;
+                                            }} catch (e) {{
+                                                parent = parent.parentElement;
+                                            }}
+                                        }}
+                                    }}
+                                    return false;
+                                }}
+                                ''')
+                                print(f"✅ Attempted parent clicks for {username}")
+                                await page.wait_for_timeout(3000)
+                            
+                            # Check if navigation occurred
+                            if '/direct/t/' in page.url:
+                                print(f"✅ Successfully opened conversation with {username}: {page.url}")
+                                conversation_found = True
+                                
+                                # Take screenshot of the conversation
+                                screenshot_path = f"conversation_{username}.png"
+                                await page.screenshot(path=screenshot_path)
+                                print(f"✅ Saved conversation screenshot: {screenshot_path}")
+                                
+                                # Extract message data
+                                print(f"📝 Extracting messages from conversation with {username}...")
+                                message_data = await page.evaluate('''
+                                () => {
+                                    // Try to find message elements
+                                    const messages = [];
+                                    
+                                    // Method 1: Standard message containers
+                                    document.querySelectorAll('div[role="row"]').forEach(row => {
+                                        if (row.innerText && row.innerText.length > 0) {
+                                            messages.push({
+                                                text: row.innerText,
+                                                is_mine: row.classList.contains('xdl72j9') || 
+                                                       row.querySelector('[style*="margin-left: auto"]') !== null,
+                                                timestamp: null
+                                            });
+                                        }
+                                    });
+                                    
+                                    // Method 2: Elements with message-like styling
+                                    document.querySelectorAll('div').forEach(div => {
+                                        if (div.clientHeight > 20 && div.clientHeight < 300 &&
+                                            div.clientWidth > 50 && div.clientWidth < 500 &&
+                                            div.innerText && div.innerText.length > 0) {
+                                            
+                                            const style = window.getComputedStyle(div);
+                                            const hasStyle = style.padding !== '0px' || 
+                                                            style.borderRadius !== '0px' ||
+                                                            style.background !== 'none';
+                                            
+                                            if (hasStyle) {
+                                                const isOutgoing = style.alignSelf === 'flex-end' || 
+                                                                 div.getAttribute('style')?.includes('margin-left: auto');
+                                                
+                                                messages.push({
+                                                    text: div.innerText.trim(),
+                                                    is_mine: isOutgoing,
+                                                    timestamp: null
+                                                });
+                                            }
+                                        }
+                                    });
+                                    
+                                    // Remove duplicates
+                                    const unique = [];
+                                    const seen = new Set();
+                                    messages.forEach(msg => {
+                                        if (!seen.has(msg.text)) {
+                                            seen.add(msg.text);
+                                            unique.push(msg);
+                                        }
+                                    });
+                                    
+                                    return {
+                                        url: window.location.href,
+                                        conversation_id: window.location.href.match(/\\/t\\/(.*?)(\\/|$)/)?.[1] || '',
+                                        message_count: unique.length,
+                                        messages: unique.slice(0, 10) // Get most recent messages
+                                    };
+                                }
+                                ''')
+                                
+                                # Store important data from this conversation
+                                conversation_data = {
+                                    'username': username,
+                                    'url': message_data.get('url', ''),
+                                    'conversation_id': message_data.get('conversation_id', 'unknown'),
+                                    'message_count': message_data.get('message_count', 0),
+                                    'messages': message_data.get('messages', []),
+                                    'screenshot': screenshot_path
+                                }
+                                
+                                all_conversation_data.append(conversation_data)
+                                
+                                # Write this conversation's data to the report
+                                report.write(f"Username: {username}\n")
+                                report.write(f"URL: {conversation_data['url']}\n")
+                                report.write(f"Messages Found: {conversation_data['message_count']}\n")
+                                report.write(f"Screenshot: {screenshot_path}\n\n")
+                                
+                                # Add message content
+                                messages = conversation_data['messages']
+                                if messages:
+                                    report.write("MOST RECENT MESSAGES:\n")
+                                    report.write("-------------------\n\n")
+                                    
+                                    for idx, msg in enumerate(messages):
+                                        sender = "You" if msg.get('is_mine') else username
+                                        timestamp = f" ({msg.get('timestamp')})" if msg.get('timestamp') else ""
+                                        report.write(f"[{idx+1}] {sender}{timestamp}: {msg.get('text')}\n\n")
+                                else:
+                                    report.write("No messages could be extracted.\n")
+                                    report.write(f"Please check screenshot: {screenshot_path}\n\n")
+                            else:
+                                print(f"⚠️ Clicked on {username} but didn't navigate to conversation")
+                                report.write(f"⚠️ ERROR: Could click on '{username}' but didn't open conversation\n\n")
+                    except Exception as find_error:
+                        print(f"Could not find conversation with '{username}': {find_error}")
+                        report.write(f"⚠️ ERROR: Could not find conversation with '{username}'\n")
+                        report.write(f"Error details: {find_error}\n\n")
+                
+                except Exception as e:
+                    print(f"Error processing conversation with '{username}': {e}")
+                    report.write(f"⚠️ ERROR: Failed to process conversation with '{username}'\n")
+                    report.write(f"Error details: {e}\n\n")
+                
+                finally:
+                    # Always try to return to inbox for next iteration
+                    if conversation_found:
+                        print(f"Returning to inbox for next conversation...")
+                        try:
+                            # This is more reliable than using browser history
+                            await page.goto("https://www.instagram.com/direct/inbox/", timeout=15000)
+                            await page.wait_for_load_state("domcontentloaded", timeout=10000)
+                            await page.wait_for_timeout(2000)  # Additional wait for UI to stabilize
+                        except Exception as nav_error:
+                            print(f"Error returning to inbox: {nav_error}")
+            
+            # Add summary at the end
+            report.write("\n\nSUMMARY\n")
+            report.write("=======\n\n")
+            report.write(f"Total conversations checked: {len(target_usernames)}\n")
+            report.write(f"Conversations found: {len(all_conversation_data)}\n")
+            
+            for convo in all_conversation_data:
+                report.write(f"- {convo['username']}: {convo['message_count']} messages\n")
+
+        print(f"\n✅ Multi-conversation report saved to {multi_report_filename}")
+        print(f"Successfully processed {len(all_conversation_data)} out of {len(target_usernames)} conversations")
+
     except Exception as e:
         # Handle errors and take error screenshot
         print(f"\n❌ Error: {e}")
