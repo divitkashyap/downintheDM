@@ -338,6 +338,67 @@ async def run_instagram_workflow():
         except Exception as e:
             print(f"Error trying to access conversations: {e}")
         
+        # Add this code where you're trying to click on conversations
+
+        # Try to find and click on a specific conversation
+        try:
+            print("Looking for specific conversations...")
+            
+            # Using the structure from the HTML you shared
+            conversation_selectors = [
+                # Based on the specific HTML structure you shared
+                'div.x9f619 div.x78zum5 span:has-text("divit")',
+                'div[class*="x9f619"] div[class*="x78zum5"] span:has-text("divit")',
+                # More general selectors that might match conversation elements
+                'span[dir="auto"]:has-text("divit")',
+                'div[role="listbox"] div span:has-text("divit")'
+            ]
+            
+            for selector in conversation_selectors:
+                try:
+                    print(f"Trying selector: {selector}")
+                    conversation = await page.wait_for_selector(selector, timeout=3000)
+                    if conversation:
+                        print(f"✅ Found conversation with selector: {selector}")
+                        # Click on the parent element that represents the whole conversation
+                        await page.evaluate('''
+                        (selector) => {
+                            const element = document.querySelector(selector);
+                            if (element) {
+                                // Find the clickable parent container (usually 3-4 levels up)
+                                let clickTarget = element;
+                                // Navigate up to find a suitable clickable container
+                                for (let i = 0; i < 4 && clickTarget; i++) {
+                                    if (clickTarget.tagName === 'DIV' && 
+                                        (clickTarget.clientHeight > 40 && clickTarget.clientWidth > 200)) {
+                                        break;
+                                    }
+                                    clickTarget = clickTarget.parentElement;
+                                }
+                                
+                                if (clickTarget) {
+                                    console.log('Found click target:', clickTarget);
+                                    clickTarget.click();
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }
+                        ''', selector)
+                        
+                        print("✅ Clicked on conversation")
+                        await page.wait_for_timeout(3000)  # Wait for conversation to load
+                        
+                        # Check if URL changed (indicates successful click)
+                        if '/direct/t/' in page.url:
+                            print(f"✅ Successfully opened conversation: {page.url}")
+                            break
+                except Exception as e:
+                    print(f"Error with selector {selector}: {e}")
+                    continue
+        except Exception as e:
+            print(f"Error trying to click on conversations: {e}")
+        
         # Take final screenshot of conversation (if we got there)
         await page.screenshot(path="5_conversation_page.png")
         print("✅ Screenshot saved: 5_conversation_page.png")
@@ -470,7 +531,7 @@ async def run_instagram_workflow():
                             rect: current.element.getBoundingClientRect()
                         });
                     }
-                }
+                });
                 
                 // Method 4: Look for avatar patterns (inbox items typically have avatars)
                 document.querySelectorAll('img').forEach(img => {
